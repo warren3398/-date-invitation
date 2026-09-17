@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Date Invitation ❤️</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100svh;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(145deg,#fff1f6,#ffd3e0,#ffb5cb);color:#6d1834}
+.card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,620px);max-height:94svh;overflow:auto;padding:clamp(25px,6vw,48px) 18px;text-align:center;background:#fffffff2;border-radius:30px;box-shadow:0 20px 60px #8d24452e;z-index:2}
+.icon{font-size:clamp(58px,15vw,88px)}
+h1{font-size:clamp(28px,7vw,44px);line-height:1.08;margin:12px 0}
+p{font-size:clamp(16px,4vw,19px);color:#97475f}
+.date{font-weight:850;color:#bd315b}
+.row{display:flex;justify-content:center;align-items:center;gap:16px;min-height:105px;margin-top:12px;flex-wrap:wrap}
+button{border:0;border-radius:999px;padding:15px 24px;font-size:18px;font-weight:850;min-width:118px;cursor:pointer;touch-action:manipulation;box-shadow:0 8px 20px #6d183424}
+#yes,.pink{background:#ff3f73;color:#fff}
+#yes,#no{transition:transform .25s,opacity .25s;transform-origin:center}
+#no{background:#fff;color:#a63858;border:2px solid #ffc0d1}
+.note{height:34px;font-weight:800;color:#c33560;margin-top:4px}
+.hidden{display:none!important}
+.opts{display:grid;gap:12px;max-width:390px;margin:20px auto;text-align:left}
+.opts label{background:#fff3f7;padding:15px;border-radius:16px;font-weight:750;box-shadow:0 5px 15px #6d183412}
+.opts input{width:22px;height:22px;vertical-align:middle;margin-right:7px;accent-color:#ff3f73}
+.warn{min-height:24px;font-weight:800;color:#c33560}
+.final{padding:12px}
+.final img{display:block;width:100%;max-height:72svh;object-fit:contain;border-radius:22px}
+.summary{margin:10px 12px 4px;font-weight:750;line-height:1.45}
+.saved{font-size:14px;margin-top:8px;opacity:.75}
+.confetti{position:fixed;top:-25px;z-index:99;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translate3d(var(--d),110vh,0) rotate(900deg);opacity:.9}}
+@media(max-width:520px){.card{width:calc(100vw - 22px);border-radius:25px}.row{gap:11px}button{min-width:108px;padding:14px 18px}.final img{max-height:68svh}}
+</style>
+</head>
+<body>
+
+<section class="card" id="p1">
+  <div class="icon">💌</div>
+  <h1>Will you go on a date with me? ❤️</h1>
+  <p class="date">September 19–20, 2026 • Saturday–Sunday</p>
+  <p>I promise it'll be worth saying yes. 🌷</p>
+  <div class="row">
+    <button id="yes">YES 💖</button>
+    <button id="no">NO 🙈</button>
+  </div>
+  <div class="note" id="note"></div>
+</section>
+
+<section class="card hidden" id="p2">
+  <div class="icon">🥰</div>
+  <h1>What kind of date? ❤️</h1>
+  <p class="date">September 19–20, 2026</p>
+  <div class="row">
+    <button class="pink" onclick="showCamping()">🏕️ CAMPING</button>
+    <button class="pink" onclick="confirmChoice('Staycation','Staycation')">🏨 STAYCATION</button>
+  </div>
+</section>
+
+<section class="card hidden" id="pCamp">
+  <div class="icon">🏕️</div>
+  <h1>Saan tayo mag-camping? ❤️</h1>
+  <p>Puwedeng higit sa isa ang piliin.</p>
+  <div class="opts">
+    <label><input type="checkbox" value="Beach"> 🌊 Dagat / Beach</label>
+    <label><input type="checkbox" value="Mountain"> ⛰️ Bundok / Mountain</label>
+    <label><input type="checkbox" value="Hot Spring"> ♨️ Hot Spring</label>
+  </div>
+  <button class="pink" onclick="confirmCamping()">CONFIRM CAMPING ❤️</button>
+  <p class="warn" id="warn"></p>
+</section>
+
+<section class="card final hidden" id="pFinal">
+  <img id="finalImg" alt="Date confirmation">
+  <div id="fallback" class="hidden">
+    <div class="icon" id="ficon"></div>
+    <h1 id="ftitle"></h1>
+  </div>
+  <p class="date">September 19–20, 2026 • Saturday–Sunday</p>
+  <p class="summary" id="summary"></p>
+  <p class="saved" id="savedMsg">Your choice is confirmed ❤️</p>
+</section>
+
+<iframe name="hiddenSubmitFrame" id="hiddenSubmitFrame" class="hidden"></iframe>
+
+<script>
+const FORM_ACTION='https://docs.google.com/forms/d/e/1FAIpQLSfCDFByNYWpvoN_ov9HSYQB8D-pOuGnG5kRU46LDjob7riqUQ/formResponse';
+const CHOICE_ENTRY='entry.1127596859';
+const PREF_ENTRY='entry.1615072295';
+
+const yes=document.getElementById('yes');
+const no=document.getElementById('no');
+const note=document.getElementById('note');
+let noCount=0;
+const notes=['Are you sure? 🥺','Really sure? 😭','Think about it again… 🥹','Last chance! ❤️'];
+const noScales=[.82,.63,.44,.25], yesScales=[1.10,1.20,1.30,1.40];
+
+function pressNo(e){
+  e.preventDefault();
+  if(noCount>=4)return;
+  note.textContent=notes[noCount];
+  no.style.transform='scale('+noScales[noCount]+')';
+  yes.style.transform='scale('+yesScales[noCount]+')';
+  noCount++;
+  if(noCount===4)setTimeout(()=>{no.style.opacity='0';no.style.pointerEvents='none';no.style.visibility='hidden'},400);
+}
+no.addEventListener('click',pressNo);
+no.addEventListener('touchstart',pressNo,{passive:false});
+
+yes.onclick=()=>{
+  p1.classList.add('hidden');
+  p2.classList.remove('hidden');
+  confetti(160);
+};
+
+function showCamping(){
+  p2.classList.add('hidden');
+  pCamp.classList.remove('hidden');
+}
+
+function confirmCamping(){
+  const picks=[...document.querySelectorAll('#pCamp input:checked')].map(x=>x.value);
+  if(!picks.length){
+    warn.textContent='Pili ka muna kahit isa ❤️';
+    return;
+  }
+  confirmChoice('Camping',picks.join(', '));
+}
+
+function saveResponse(choice,preference){
+  // Hidden traditional form submission avoids CORS issues on static GitHub Pages.
+  const form=document.createElement('form');
+  form.method='POST';
+  form.action=FORM_ACTION;
+  form.target='hiddenSubmitFrame';
+  form.style.display='none';
+
+  const a=document.createElement('input');
+  a.name=CHOICE_ENTRY; a.value=choice;
+  const b=document.createElement('input');
+  b.name=PREF_ENTRY; b.value=preference;
+
+  form.append(a,b);
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(()=>form.remove(),1500);
+}
+
+function confirmChoice(choice,preference){
+  saveResponse(choice,preference);
+
+  p2.classList.add('hidden');
+  pCamp.classList.add('hidden');
+  pFinal.classList.remove('hidden');
+
+  const img=document.getElementById('finalImg');
+  const fallback=document.getElementById('fallback');
+  img.classList.remove('hidden');
+  fallback.classList.add('hidden');
+
+  if(choice==='Camping'){
+    img.src='camping-confirmation.png';
+    summary.textContent='Preferred camping place: '+preference+' ❤️';
+  }else{
+    img.src='staycation-confirmation.png';
+    summary.textContent='Cozy weekend staycation — You & Me ❤️';
+  }
+
+  img.onerror=()=>{
+    img.classList.add('hidden');
+    fallback.classList.remove('hidden');
+    ficon.textContent=choice==='Camping'?'🏕️':'🏨';
+    ftitle.textContent=choice+' Date Confirmed! ❤️';
+  };
+
+  confetti(120);
+}
+
+function confetti(q){
+  const colors=['#ff3f73','#ffd166','#06d6a0','#4cc9f0','#9b5de5','#fff'];
+  for(let i=0;i<q;i++){
+    const c=document.createElement('i');
+    c.className='confetti';
+    c.style.left=Math.random()*100+'vw';
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.width=6+Math.random()*8+'px';
+    c.style.height=8+Math.random()*15+'px';
+    c.style.setProperty('--d',(-120+Math.random()*240)+'px');
+    c.style.animationDuration=1.8+Math.random()*2.5+'s';
+    c.style.animationDelay=Math.random()*.35+'s';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),5000);
+  }
+}
+</script>
+</body>
+</html>
